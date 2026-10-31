@@ -185,4 +185,147 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(informe(registro, 3.0)("Choco").replicas ==
       replicasSensibles(6.0, 3.0).length)
   }
+
+    // Tests adicionales Punto 3 -----------------------------------------------
+
+  test("conteoSeguro: responde correctamente para varias regiones desconocidas") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Cauca", 4.0, 20),
+      Sismo(Fecha(2026, 2), "Huila", 5.0, 30)
+    )
+
+    val consulta = conteoSeguro(datos)
+
+    assert(consulta("Amazonas") == 0)
+    assert(consulta("Bogota") == 0)
+    assert(consulta("Cesar") == 0)
+  }
+
+  test("maximaDe: encuentra la máxima sin importar el orden de los registros") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Nariño", 3.0, 20),
+      Sismo(Fecha(2026, 2), "Nariño", 8.2, 30),
+      Sismo(Fecha(2026, 3), "Nariño", 5.0, 25)
+    )
+
+    assert(maximaDe(datos, "Nariño") == Some(8.2))
+  }
+
+  test("maximaDe: una región con un solo sismo devuelve su magnitud") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Caldas", 4.7, 20),
+      Sismo(Fecha(2026, 2), "Tolima", 6.3, 30)
+    )
+
+    assert(maximaDe(datos, "Caldas") == Some(4.7))
+  }
+
+  test("regionMasActiva: entre tres regiones empatadas gana la alfabéticamente menor") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Zulia", 4.0, 20),
+      Sismo(Fecha(2026, 2), "Boyaca", 5.0, 30),
+      Sismo(Fecha(2026, 3), "Arauca", 4.5, 25)
+    )
+
+    assert(regionMasActiva(datos) == Some("Arauca"))
+  }
+
+  test("regionMasActiva: una región con más registros gana aunque aparezca al final") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Antioquia", 4.0, 20),
+      Sismo(Fecha(2026, 2), "Cauca", 5.0, 30),
+      Sismo(Fecha(2026, 3), "Cauca", 4.5, 25),
+      Sismo(Fecha(2026, 4), "Cauca", 3.5, 40)
+    )
+
+    assert(regionMasActiva(datos) == Some("Cauca"))
+  }
+
+    // Tests adicionales Punto 4 -----------------------------------------------
+
+  test("replicas: el redondeo acumulado se utiliza en cada nueva réplica") {
+    assert(replicas(1.11).take(5).toList ==
+      List(1.11, 0.89, 0.71, 0.57, 0.46))
+  }
+
+  test("replicas: permite solicitar una cantidad grande de elementos") {
+    assert(replicas(8.0).take(1000).toList.length == 1000)
+  }
+
+  test("replicas: una magnitud inicial de cero mantiene la secuencia en cero") {
+    assert(replicas(0.0).take(10).toList.forall(_ == 0.0))
+  }
+
+  test("replicasSensibles: incluye las réplicas que superan el mínimo") {
+    assert(replicasSensibles(4.0, 2.0) ==
+      List(4.0, 3.2, 2.56, 2.05))
+  }
+
+  test("replicasSensibles: termina al alcanzar una magnitud igual al mínimo") {
+    assert(replicasSensibles(3.13, 2.0) ==
+      List(3.13, 2.5))
+  }
+
+    // Tests adicionales Punto 5 -----------------------------------------------
+
+  test("informe: calcula correctamente regiones con diferentes cantidades de sismos") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Huila", 4.5, 20),
+      Sismo(Fecha(2026, 2), "Huila", 3.0, 30),
+      Sismo(Fecha(2026, 3), "Caldas", 6.0, 25),
+      Sismo(Fecha(2026, 4), "Huila", 5.0, 40)
+    )
+
+    assert(informe(datos, 4.0) ==
+      Map(
+        "Huila" -> Resumen(3, 5.0, 1),
+        "Caldas" -> Resumen(1, 6.0, 4)
+      ))
+  }
+
+  test("informe: conserva el conteo y la máxima con un mínimo muy alto") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Cauca", 4.0, 20),
+      Sismo(Fecha(2026, 2), "Cauca", 5.5, 30),
+      Sismo(Fecha(2026, 3), "Valle", 3.5, 25)
+    )
+
+    assert(informe(datos, 10.0) ==
+      Map(
+        "Cauca" -> Resumen(2, 5.5, 0),
+        "Valle" -> Resumen(1, 3.5, 0)
+      ))
+  }
+
+  test("informe: una región con un solo sismo genera un resumen completo") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Nariño", 4.0, 35)
+    )
+
+    assert(informe(datos, 2.0) ==
+      Map("Nariño" -> Resumen(1, 4.0, 3)))
+  }
+
+  test("informe: cambiar el orden del registro no cambia los resúmenes") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Meta", 4.0, 20),
+      Sismo(Fecha(2026, 2), "Huila", 6.0, 30),
+      Sismo(Fecha(2026, 3), "Meta", 5.0, 25),
+      Sismo(Fecha(2026, 4), "Huila", 3.0, 40)
+    )
+
+    assert(informe(datos, 2.0) == informe(datos.reverse, 2.0))
+  }
+
+  test("informe: la suma de los conteos coincide con el tamaño del registro") {
+    val datos = List(
+      Sismo(Fecha(2026, 1), "Cauca", 4.0, 20),
+      Sismo(Fecha(2026, 2), "Huila", 5.0, 30),
+      Sismo(Fecha(2026, 3), "Cauca", 6.0, 25),
+      Sismo(Fecha(2026, 4), "Meta", 3.0, 40),
+      Sismo(Fecha(2026, 5), "Huila", 4.5, 35)
+    )
+
+    assert(informe(datos, 2.0).values.map(_.sismos).sum == datos.length)
+  }
 }

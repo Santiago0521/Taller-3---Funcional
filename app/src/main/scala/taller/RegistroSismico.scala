@@ -33,9 +33,7 @@ class RegistroSismico {
 
   /** Un mapa que responde cero por las regiones que no están en el registro. */
   def conteoSeguro(r: Registro): Map[String, Int] = {
-    val conteo = conteoPorRegion(r)
-    val regiones = r.map(_.region).distinct
-    regiones.map(region => region -> conteo.getOrElse(region, 0)).toMap
+    conteoPorRegion(r).withDefaultValue(0)
   }
 
   /** La magnitud máxima de una región, o vacío si no hay registros suyos. */
