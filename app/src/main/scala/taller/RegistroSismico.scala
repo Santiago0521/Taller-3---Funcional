@@ -29,7 +29,28 @@ class RegistroSismico {
   }
 
   /** Parejas de regiones distintas con algún sismo de magnitudes cercanas. */
-  def paresCercanos(r: Registro, dif: Double): List[(String, String)] = ???
+ def paresCercanos(r: Registro, dif: Double): List[(String, String)] = {
+    def buscar(
+        sismos: List[Sismo],
+        regionesVistas: List[String]): List[(String, String)] = {
+      
+      sismos match {
+        case Nil => List()
+
+        case sismo :: resto =>
+          val parejas = for {
+            otro <- resto 
+            if sismo.region != otro.region
+            if !regionesVistas.contains(otro.region)
+            if Math.abs(sismo.magnitud - otro.magnitud) <= dif
+          } yield (sismo.region, otro.region)
+
+          parejas ::: buscar(resto, sismo.region :: regionesVistas)
+      }
+    }
+
+    buscar(r, List())
+  }
 
   // Punto 2: agrupar con mapas --------------------------------------------------
 
