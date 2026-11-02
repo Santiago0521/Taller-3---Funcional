@@ -30,35 +30,40 @@ class RegistroSismico {
 
   /** Parejas de regiones distintas con algún sismo de magnitudes cercanas. */
  def paresCercanos(r: Registro, dif: Double): List[(String, String)] = {
-    def buscar(
-        sismos: List[Sismo],
-        regionesVistas: List[String]): List[(String, String)] = {
-      
-      sismos match {
-        case Nil => List()
+    val regiones = (for {
+      sismo <- r 
+    } yield sismo.region).distinct
 
-        case sismo :: resto =>
-          val parejas = for {
-            otro <- resto 
-            if sismo.region != otro.region
-            if !regionesVistas.contains(otro.region)
-            if Math.abs(sismo.magnitud - otro.magnitud) <= dif
-          } yield (sismo.region, otro.region)
+    val parejas = for {
+      region1 <- regiones
+      region2 <- regiones.drop(regiones.indexOf(region1) + 1)
+      sismo1 <- r
+      sismo2 <- r
+      if sismo1.region == region1
+      if sismo2.region == region2
+      if Math.abs(sismo1.magnitud - sismo2.magnitud) <= dif
+   } yield (region1, region2)
 
-          parejas ::: buscar(resto, sismo.region :: regionesVistas)
-      }
-    }
-
-    buscar(r, List())
-  }
+   parejas.distinct
+}
 
   // Punto 2: agrupar con mapas --------------------------------------------------
 
-  def porRegion(r: Registro): Map[String, List[Sismo]] = ???
+  def porRegion(r: Registro): Map[String, List[Sismo]] = {
+    r.groupBy(_.region)
+  }
 
-  def conteoPorRegion(r: Registro): Map[String, Int] = ???
+  def conteoPorRegion(r: Registro): Map[String, Int] = {
+    porRegion(r).map { 
+      case (region, sismos) => (region, sismos.length) 
+    }
+  }
 
-  def magnitudMaxima(r: Registro): Map[String, Double] = ???
+  def magnitudMaxima(r: Registro): Map[String, Double] = {
+    porRegion(r).map { 
+      case (region, sismos) => (region, sismos.map(_.magnitud).max) 
+    }
+  }
 
   // Punto 3: consultas seguras --------------------------------------------------
 
