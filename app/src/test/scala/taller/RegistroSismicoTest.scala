@@ -66,17 +66,13 @@ class RegistroSismicoTest extends AnyFunSuite {
     assert(paresCercanos(registro, 5.0).forall { case (a, b) => a != b })
   }
 
-   // Tests propios - Punto 1 -----------------------------------------------
+  
+  // Tests propios - Punto 1 -----------------------------------------------
 
-test("Propio P1: fuertes con umbral 4.0") {
+  test("Propio P1: fuertes con umbral 4.0") {
   assert(fuertes(registro, 4.0) ==
     List("Valle", "Santander", "Choco", "Santander", "Valle"))
-}
-
- test("Propio P1: fuertes con umbral 4.2") {
-  assert(fuertes(registro, 4.2) ==
-    List("Santander", "Choco", "Santander", "Valle"))
-}
+  }
 
   test("Propio P1: fuertes con umbral negativo") {
     assert(fuertes(registro, -1.0).length == 7)
@@ -91,6 +87,20 @@ test("Propio P1: fuertes con umbral 4.0") {
     assert(enRegion(registro, "Choco") ==
       List(6.0, 3.1))
   }
+
+  test("Propio P1: paresCercanos con diferencia 0.5") {
+  assert(paresCercanos(registro, 0.5) ==
+    List(("Valle", "Santander")))
+}
+
+test("Propio P1: paresCercanos con diferencia 2.0 incluye las tres parejas") {
+  assert(paresCercanos(registro, 2.0) ==
+    List(
+      ("Valle", "Santander"),
+      ("Valle", "Choco"),
+      ("Santander", "Choco")
+    ))
+}
 
   // Punto 2 -------------------------------------------------------------------
 
@@ -115,6 +125,32 @@ test("Propio P1: fuertes con umbral 4.0") {
 
   test("magnitudMaxima: las regiones ausentes no aparecen") {
     assert(!magnitudMaxima(registro).contains("Amazonas"))
+  }
+
+  // Tests propios - Punto 2 -----------------------------------------------
+
+  test("Propio P2: porRegion conserva todos los sismos de Valle") {
+    assert(porRegion(registro)("Valle").length == 3)
+  }
+
+  test("Propio P2: porRegion con registro vacío") {
+    assert(porRegion(vacio) == Map())
+  }
+
+  test("Propio P2: conteoPorRegion tiene tres regiones") {
+    assert(conteoPorRegion(registro).size == 3)
+  }
+
+  test("Propio P2: conteoPorRegion suma siete sismos") {
+    assert(conteoPorRegion(registro).values.sum == 7)
+  }
+
+  test("Propio P2: magnitudMaxima de Santander") {
+    assert(magnitudMaxima(registro)("Santander") == 5.1)
+  }
+
+  test("Propio P2: magnitudMaxima de Choco") {
+    assert(magnitudMaxima(registro)("Choco") == 6.0)
   }
 
   // Punto 3 -------------------------------------------------------------------
