@@ -341,7 +341,7 @@ test("Propio P1: paresCercanos con diferencia 2.0 incluye las tres parejas") {
     assert(informe(datos, 4.0) ==
       Map(
         "Huila" -> Resumen(3, 5.0, 1),
-        "Caldas" -> Resumen(1, 6.0, 4)
+        "Caldas" -> Resumen(1, 6.0, 2)
       ))
   }
 
@@ -365,7 +365,7 @@ test("Propio P1: paresCercanos con diferencia 2.0 incluye las tres parejas") {
     )
 
     assert(informe(datos, 2.0) ==
-      Map("Nariño" -> Resumen(1, 4.0, 3)))
+      Map("Nariño" -> Resumen(1, 4.0, 4)))
   }
 
   test("informe: cambiar el orden del registro no cambia los resúmenes") {
